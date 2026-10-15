@@ -1,159 +1,318 @@
-# Turborepo starter
+# ICSAMS — Intelligent Campus Security and Access Monitoring System
 
-This Turborepo starter is maintained by the Turborepo core team.
+> Final Year Project · Federal University Wukari, Taraba State · 2024/2025  
+> **JOSEPH, Rhema Elyon** · CIS/CSC/22/071 · B.Sc. Computer Science (Software Engineering)
 
-## Using this example
+An end-to-end intelligent campus security platform that integrates IoT hardware, deep learning video analysis, and a role-based web dashboard to provide Nigerian university security teams with automated real-time monitoring and structured investigation support.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## What It Does
+
+ICSAMS replaces reactive, paper-based campus security with a three-layer system:
+
+- **IoT Layer** — ESP32-CAM cameras, PIR motion sensors, and ESP32 BLE beacons capture live campus data
+- **ML Layer** — YOLOv8 detects persons and objects per frame; CNN-LSTM analyses behaviour over time; an autoencoder scores anomalies
+- **Dashboard Layer** — A role-based Next.js web dashboard delivers real-time alerts to guards, historical queries to investigation officers, and system analytics to the chief security officer
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Dashboard (Frontend) | Next.js 14.2, TypeScript 5.5, Tailwind CSS 3.4 |
+| Backend API | FastAPI 0.115, Python 3.12 |
+| ML Pipeline | PyTorch 2.4, Ultralytics YOLOv8 8.3, OpenCV 4.10 |
+| Database | PostgreSQL 16 + Prisma ORM 5.19 |
+| Monorepo | Turborepo + pnpm workspaces |
+| IoT Firmware | Arduino IDE 2.3 (ESP32) |
+| Statistical Eval | scikit-learn 1.5, SciPy 1.14 |
+
+---
+
+## Repository Structure
+
+```
+icsams/
+├── apps/
+│   ├── web/                  # Next.js dashboard (Guard, Officer, CSO views)
+│   └── api/                  # FastAPI backend (REST + WebSocket)
+├── packages/
+│   ├── database/             # Prisma schema + generated client
+│   ├── types/                # Shared TypeScript types
+│   ├── ui/                   # Shared React components
+│   └── config/               # Shared tsconfig, tailwind, eslint configs
+├── services/
+│   └── ml/                   # Python ML pipeline (YOLOv8 + CNN-LSTM + AE)
+├── firmware/                 # ESP32-CAM, PIR sensor, BLE beacon firmware
+├── turbo.json
+├── package.json
+└── pnpm-workspace.yaml
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## Prerequisites
 
-### Apps and Packages
+Make sure you have the following installed:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- [Node.js](https://nodejs.org/) >= 20.x
+- [pnpm](https://pnpm.io/) >= 9.x — `npm install -g pnpm`
+- [Python](https://www.python.org/) >= 3.12
+- [PostgreSQL](https://www.postgresql.org/) >= 16
+- [Git](https://git-scm.com/)
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+---
 
-### Utilities
+## Getting Started
 
-This Turborepo has some additional tools already setup for you:
+### 1. Clone the repository
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+git clone https://github.com/lerhem/icsams.git
+cd icsams
 ```
 
-Without global `turbo`, use your package manager:
+### 2. Install JavaScript dependencies
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+```bash
+pnpm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+### 3. Set up environment variables
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Copy the example env files and fill in your values:
 
-```sh
-turbo build --filter=docs
+```bash
+cp apps/web/.env.example apps/web/.env.local
+cp apps/api/.env.example apps/api/.env
 ```
 
-Without global `turbo`:
+See [Environment Variables](#environment-variables) below for what each value should be.
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+### 4. Set up the database
+
+```bash
+# Generate Prisma client
+pnpm db:generate
+
+# Push schema to your PostgreSQL database
+pnpm db:push
 ```
 
-### Develop
+### 5. Set up the Python environment
 
-To develop all apps and packages, run the following command:
+```bash
+cd services/ml
+python -m venv venv
+source venv/bin/activate      # Linux/macOS
+# venv\Scripts\activate       # Windows
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+pip install -r requirements.txt
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+## Running the Project
+
+### Development (all JS apps in parallel)
+
+```bash
+pnpm dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+This starts `apps/web` (Next.js) and any other JS apps concurrently via Turborepo.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### FastAPI backend (separate terminal)
 
-```sh
-turbo dev --filter=web
+```bash
+cd apps/api
+source venv/bin/activate
+uvicorn main:app --reload --port 8000
 ```
 
-Without global `turbo`:
+### ML pipeline (separate terminal)
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+```bash
+cd services/ml
+source venv/bin/activate
+python pipeline.py
 ```
 
-### Remote Caching
+### Individual apps
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
+```bash
+pnpm --filter @icsams/web dev      # Next.js dashboard only
+pnpm --filter @icsams/api dev      # Not applicable — run uvicorn directly
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+## Environment Variables
+
+### `apps/web/.env.local`
+
+```env
+# Database (used by Prisma)
+DATABASE_URL="postgresql://user:password@localhost:5432/icsams"
+
+# Auth
+AUTH_SECRET="your-secret-key-here"
+AUTH_URL="http://localhost:3000"
+
+# API
+NEXT_PUBLIC_API_URL="http://localhost:8000"
+NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws"
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### `apps/api/.env`
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/icsams"
+SECRET_KEY="your-jwt-secret-key"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=480
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+# ML service
+ML_SERVICE_URL="http://localhost:8001"
 
-```sh
-turbo link
+# CORS
+ALLOWED_ORIGINS="http://localhost:3000"
 ```
 
-Without global `turbo`:
+### `services/ml/.env`
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
+```env
+# Camera stream
+CAMERA_STREAM_URL="http://192.168.x.x/stream"  # ESP32-CAM IP
+
+# Model paths
+YOLOV8_MODEL_PATH="models/yolov8n.pt"
+CNN_LSTM_MODEL_PATH="models/cnn_lstm.pth"
+AUTOENCODER_MODEL_PATH="models/autoencoder.pth"
+
+# Risk thresholds
+SUSPICIOUS_THRESHOLD=0.40
+CRITICAL_THRESHOLD=0.70
+
+# API
+API_URL="http://localhost:8000"
 ```
 
-## Useful Links
+---
 
-Learn more about the power of Turborepo:
+## API Documentation
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+Once the FastAPI server is running, interactive API docs are available at:
+
+- **Swagger UI** → http://localhost:8000/docs
+- **ReDoc** → http://localhost:8000/redoc
+
+---
+
+## ML Pipeline Overview
+
+The ICSIP (Integrated Campus Security Intelligence Pipeline) processes camera frames in four stages:
+
+```
+ESP32-CAM → YOLOv8 (detection) → CNN (features) → LSTM (temporal) → Risk Module
+                                                  ↘ Autoencoder (anomaly score)
+```
+
+**Risk scoring formula:**
+
+```
+RS = 0.35 × P_c + 0.35 × A_n + 0.15 × w_time + 0.15 × w_loc
+
+Normal     if RS < 0.40
+Suspicious if 0.40 ≤ RS < 0.70
+Critical   if RS ≥ 0.70
+```
+
+---
+
+## Dashboard Roles
+
+| Role | Access |
+|---|---|
+| **Security Guard** | Live camera feeds, real-time alerts, alert acknowledgement |
+| **Investigation Officer** | Historical event queries, anomaly timelines, footage review, PDF reports |
+| **Chief Security Officer** | All officer capabilities + user management, camera config, threshold tuning, analytics |
+
+---
+
+## Database Schema
+
+Six primary tables: `users`, `locations`, `cameras`, `events`, `detections`, `alerts`.
+
+Prisma schema is located at `packages/database/prisma/schema.prisma`.
+
+```bash
+# View schema
+cat packages/database/prisma/schema.prisma
+
+# Open Prisma Studio (GUI)
+pnpm db:studio
+```
+
+---
+
+## Firmware
+
+ESP32 firmware is in the `firmware/` directory:
+
+```
+firmware/
+├── esp32-cam/        # Camera streaming firmware (MJPEG over HTTP)
+├── pir-sensor/       # PIR motion detection + WiFi event push
+└── ble-beacon/       # BLE beacon broadcasting location ID
+```
+
+Flash using Arduino IDE 2.3. See `firmware/README.md` for wiring diagrams and upload instructions.
+
+---
+
+## Dataset
+
+This project uses the **UCF-Crime Dataset** for training and evaluation.
+
+- **Source:** [UCF Center for Research in Computer Vision](https://www.crcv.ucf.edu/research/real-world-anomaly-detection/)
+- **Videos:** 1,900 (950 normal + 950 anomalous, 13 crime categories)
+- **License:** Academic research use only
+
+```bash
+# After downloading, place videos in:
+services/ml/data/ucf-crime/
+├── Normal/
+└── Anomaly/
+    ├── Assault/
+    ├── Fighting/
+    └── ...
+```
+
+---
+
+## Project Status
+
+| Chapter | Status |
+|---|---|
+| Chapter 1 — Introduction | ✅ Complete |
+| Chapter 2 — Literature Review | ✅ Complete (40 papers) |
+| Chapter 3 — Research Methodology | ✅ Complete |
+| Chapter 4 — System Design & Implementation | 🔄 In Progress |
+| Chapter 5 — Summary, Conclusion & Recommendation | ⏳ Pending |
+
+---
+
+## Supervisor
+
+Department of Computer Science  
+Federal University Wukari, Taraba State
+
+---
+
+## License
+
+This project is developed for academic research purposes only.  
+All rights reserved © 2025 JOSEPH, Rhema Elyon.
