@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional, List
-from models import UserRole, RiskLevel, SensitivityLevel, User
+from models import UserRole, RiskLevel, SensitivityLevel
 
 
 # ── AUTH ───────────────────────────────────────────────────────
@@ -21,9 +21,6 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
-
-class UserInDB(User):
-    hashed_password: str
 
 class UserOut(BaseModel):
     id: int
