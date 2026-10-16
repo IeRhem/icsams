@@ -29,3 +29,15 @@ def decode_access_token(token: str) -> Optional[dict]:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except JWTError:
         return None
+
+
+# ── SERVICE KEY ────────────────────────────────────────────────
+from fastapi import Header, HTTPException, status          # noqa: E402
+
+def require_service_key(x_service_key: str = Header(...)):
+    """Validates that the request carries a valid service API key."""
+    if not settings.SERVICE_API_KEY or x_service_key != settings.SERVICE_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid or missing service key",
+        )

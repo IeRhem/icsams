@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
 from datetime import datetime
 from typing import List, Optional
+import anyio
 from core.database import get_db
+from core.security import require_service_key
 from routers.auth import require_guard, require_officer, require_cso, get_current_user
 from models import Alert, Event, Camera, Location, User, RiskLevel
 from models.schemas import AlertCreate, AlertOut, AcknowledgeAlert
@@ -14,9 +16,10 @@ router = APIRouter()
 
 # ── CREATE ALERT (called by ML pipeline) ───────────────────────
 @router.post("/", response_model=AlertOut, status_code=201)
-async def create_alert(
+def create_alert(
     payload: AlertCreate,
     db: Session = Depends(get_db),
+    _key: None = Depends(require_service_key),
 ):
     # Verify event exists
     event = db.query(Event).filter(Event.id == payload.event_id).first()
@@ -47,7 +50,7 @@ async def create_alert(
     db.refresh(alert)
 
     # Broadcast to all connected dashboard clients via WebSocket
-    await manager.broadcast({
+    anyio.from_thread.run(manager.broadcast, {
         "type": "new_alert",
         "alert_id": alert.id,
         "risk_level": alert.risk_level.value,
@@ -123,7 +126,7 @@ def get_alert(
 
 # ── ACKNOWLEDGE ALERT (guard action) ───────────────────────────
 @router.patch("/{alert_id}/acknowledge", response_model=AlertOut)
-async def acknowledge_alert(
+def acknowledge_alert(
     alert_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_guard),
@@ -140,7 +143,7 @@ async def acknowledge_alert(
     db.refresh(alert)
 
     # Notify dashboard that alert was cleared
-    await manager.broadcast({
+    anyio.from_thread.run(manager.broadcast, {
         "type": "alert_acknowledged",
         "alert_id": alert.id,
         "acknowledged_by": current_user.name,

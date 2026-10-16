@@ -4,9 +4,10 @@ from sqlalchemy import desc
 from datetime import datetime
 from typing import List, Optional
 from core.database import get_db
+from core.security import require_service_key
 from routers.auth import require_officer
 from models import Event, Detection, Camera, User
-from models.schemas import EventOut
+from models.schemas import EventOut, EventDetailOut
 
 router = APIRouter()
 
@@ -19,6 +20,7 @@ def log_event(
     frame_count: int,
     raw_features: Optional[dict] = None,
     db: Session = Depends(get_db),
+    _key: None = Depends(require_service_key),
 ):
     camera = db.query(Camera).filter(Camera.id == camera_id).first()
     if not camera:
@@ -69,7 +71,7 @@ def get_events(
 
 
 # ── GET SINGLE EVENT WITH DETECTIONS ───────────────────────────
-@router.get("/{event_id}")
+@router.get("/{event_id}", response_model=EventDetailOut)
 def get_event(
     event_id: int,
     db: Session = Depends(get_db),

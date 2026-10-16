@@ -1,11 +1,11 @@
-from fastapi import FastAPI
+from typing import Optional
+from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from routers import auth, alerts, events, cameras, users
 from core.database import Base, engine, SessionLocal
-from core.security import hash_password
+from core.security import hash_password, decode_access_token
 from models import User, Location, Camera, Event, Detection, Alert, UserRole
-from fastapi import WebSocket, WebSocketDisconnect
 from ws.manager import manager
 
 
@@ -37,7 +37,21 @@ def root():
     return {"status": "ICSAMS API running"}
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    token: Optional[str] = Query(None),
+):
+    token = token or websocket.query_params.get("token")
+    if not token and websocket.headers.get("authorization"):
+        auth_header = websocket.headers.get("authorization")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+
+    payload = decode_access_token(token) if token else None
+    if not payload:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await manager.connect(websocket)
     try:
         while True:

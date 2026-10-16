@@ -80,6 +80,59 @@ class EventOut(BaseModel):
         from_attributes = True
 
 
+class DetectionOut(BaseModel):
+    id: int
+    frame_number: int
+    bbox_x1: float
+    bbox_y1: float
+    bbox_x2: float
+    bbox_y2: float
+    object_class: str
+    confidence: float
+
+    class Config:
+        from_attributes = True
+
+
+class AlertSummaryOut(BaseModel):
+    id: int
+    risk_level: str
+    anomaly_score: float
+    cls_confidence: float
+    behaviour_class: Optional[str]
+    created_at: datetime
+    acknowledged_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class CameraSummaryOut(BaseModel):
+    id: int
+    camera_name: str
+    ip_address: Optional[str]
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class EventDetailOut(BaseModel):
+    id: int
+    camera_id: int
+    event_time: datetime
+    person_count: int
+    frame_count: int
+    raw_features: Optional[dict]
+    processed: bool
+    detections: List[DetectionOut] = []
+    alert: Optional[AlertSummaryOut] = None
+    camera: Optional[CameraSummaryOut] = None
+
+    class Config:
+        from_attributes = True
+
+
 # ── ALERTS ─────────────────────────────────────────────────────
 class AlertCreate(BaseModel):
     event_id: int
