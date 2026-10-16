@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
@@ -10,6 +11,8 @@ from routers.auth import require_guard, require_officer, require_cso, get_curren
 from models import Alert, Event, Camera, Location, User, RiskLevel
 from models.schemas import AlertCreate, AlertOut, AcknowledgeAlert
 from ws.manager import manager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -44,21 +47,24 @@ def create_alert(
     if payload.risk_level in [RiskLevel.suspicious, RiskLevel.critical]:
         camera = db.query(Camera).filter(Camera.id == event.camera_id).first()
         if camera and camera.location:
-            camera.location.incident_count += 1
+            camera.location.incident_count = Location.incident_count + 1
 
     db.commit()
     db.refresh(alert)
 
     # Broadcast to all connected dashboard clients via WebSocket
-    anyio.from_thread.run(manager.broadcast, {
-        "type": "new_alert",
-        "alert_id": alert.id,
-        "risk_level": alert.risk_level.value,
-        "behaviour_class": alert.behaviour_class,
-        "anomaly_score": alert.anomaly_score,
-        "camera_id": event.camera_id,
-        "created_at": alert.created_at.isoformat(),
-    })
+    try:
+        anyio.from_thread.run(manager.broadcast, {
+            "type": "new_alert",
+            "alert_id": alert.id,
+            "risk_level": alert.risk_level.value,
+            "behaviour_class": alert.behaviour_class,
+            "anomaly_score": alert.anomaly_score,
+            "camera_id": event.camera_id,
+            "created_at": alert.created_at.isoformat(),
+        })
+    except Exception as e:
+        logger.warning(f"Failed to broadcast new alert notification: {e}")
 
     return alert
 
@@ -86,8 +92,8 @@ def get_alerts(
     camera_id: Optional[int] = Query(None),
     from_date: Optional[datetime] = Query(None),
     to_date: Optional[datetime] = Query(None),
-    limit: int = Query(50, le=200),
-    offset: int = Query(0),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     _: User = Depends(require_officer),
 ):
@@ -131,7 +137,7 @@ def acknowledge_alert(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_guard),
 ):
-    alert = db.query(Alert).filter(Alert.id == alert_id).first()
+    alert = db.query(Alert).filter(Alert.id == alert_id).with_for_update().first()
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
     if alert.acknowledged_at:
@@ -143,11 +149,14 @@ def acknowledge_alert(
     db.refresh(alert)
 
     # Notify dashboard that alert was cleared
-    anyio.from_thread.run(manager.broadcast, {
-        "type": "alert_acknowledged",
-        "alert_id": alert.id,
-        "acknowledged_by": current_user.name,
-        "acknowledged_at": alert.acknowledged_at.isoformat(),
-    })
+    try:
+        anyio.from_thread.run(manager.broadcast, {
+            "type": "alert_acknowledged",
+            "alert_id": alert.id,
+            "acknowledged_by": current_user.name,
+            "acknowledged_at": alert.acknowledged_at.isoformat(),
+        })
+    except Exception as e:
+        logger.warning(f"Failed to broadcast alert acknowledgement notification: {e}")
 
     return alert

@@ -7,7 +7,7 @@ from core.database import get_db
 from core.security import require_service_key
 from routers.auth import require_officer
 from models import Event, Detection, Camera, User
-from models.schemas import EventOut, EventDetailOut
+from models.schemas import EventCreate, EventOut, EventDetailOut
 
 router = APIRouter()
 
@@ -15,22 +15,19 @@ router = APIRouter()
 # ── LOG EVENT (called by ML pipeline) ──────────────────────────
 @router.post("/", response_model=EventOut, status_code=201)
 def log_event(
-    camera_id: int,
-    person_count: int,
-    frame_count: int,
-    raw_features: Optional[dict] = None,
+    payload: EventCreate,
     db: Session = Depends(get_db),
     _key: None = Depends(require_service_key),
 ):
-    camera = db.query(Camera).filter(Camera.id == camera_id).first()
+    camera = db.query(Camera).filter(Camera.id == payload.camera_id).first()
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
 
     event = Event(
-        camera_id=camera_id,
-        person_count=person_count,
-        frame_count=frame_count,
-        raw_features=raw_features,
+        camera_id=payload.camera_id,
+        person_count=payload.person_count,
+        frame_count=payload.frame_count,
+        raw_features=payload.raw_features,
     )
     db.add(event)
     db.commit()
@@ -45,14 +42,14 @@ def get_events(
     from_date: Optional[datetime] = Query(None),
     to_date: Optional[datetime] = Query(None),
     processed: Optional[bool] = Query(None),
-    limit: int = Query(50, le=500),
-    offset: int = Query(0),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     _: User = Depends(require_officer),
 ):
     query = db.query(Event)
 
-    if camera_id:
+    if camera_id is not None:
         query = query.filter(Event.camera_id == camera_id)
     if from_date:
         query = query.filter(Event.event_time >= from_date)

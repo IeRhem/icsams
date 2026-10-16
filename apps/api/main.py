@@ -3,8 +3,9 @@ from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from routers import auth, alerts, events, cameras, users
-from core.database import Base, engine
+from core.database import Base, engine, SessionLocal
 from core.security import decode_access_token
+from models import User
 from ws.manager import manager
 
 
@@ -51,10 +52,32 @@ async def websocket_endpoint(
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
+    sub = payload.get("sub")
+    if not sub:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    try:
+        user_id = int(sub)
+    except (ValueError, TypeError):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user or not user.is_active:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+    finally:
+        db.close()
+
     await manager.connect(websocket)
     try:
         while True:
             # Keep connection alive — client can send pings
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    finally:
         manager.disconnect(websocket)

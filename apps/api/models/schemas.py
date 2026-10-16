@@ -69,6 +69,12 @@ class CameraOut(BaseModel):
 
 
 # ── EVENTS ─────────────────────────────────────────────────────
+class EventCreate(BaseModel):
+    camera_id: int
+    person_count: int
+    frame_count: int
+    raw_features: Optional[dict] = None
+
 class EventOut(BaseModel):
     id: int
     camera_id: int

@@ -20,14 +20,14 @@ class ConnectionManager:
     async def broadcast(self, data: dict):
         message = json.dumps(data)
         dead = []
-        for connection in self.active_connections:
+        for connection in list(self.active_connections):
             try:
                 await connection.send_text(message)
             except Exception:
                 dead.append(connection)
         # Clean up dead connections
         for conn in dead:
-            self.active_connections.remove(conn)
+            self.disconnect(conn)
 
 
 # Single instance shared across the app
