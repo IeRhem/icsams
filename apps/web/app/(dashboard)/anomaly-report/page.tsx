@@ -1,3 +1,5 @@
+import { IconBolt } from "@tabler/icons-react";
+
 export default function AnomalyReportPage() {
   const reports = [
     {
@@ -49,7 +51,7 @@ export default function AnomalyReportPage() {
         </div>
 
         <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition-colors flex items-center gap-2">
-          <span>⚡</span>
+          <IconBolt className="size-4" />
           <span>Generate New Report</span>
         </button>
       </div>

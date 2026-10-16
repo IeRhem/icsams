@@ -3,9 +3,8 @@ from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from routers import auth, alerts, events, cameras, users
-from core.database import Base, engine, SessionLocal
-from core.security import hash_password, decode_access_token
-from models import User, Location, Camera, Event, Detection, Alert, UserRole
+from core.database import Base, engine
+from core.security import decode_access_token
 from ws.manager import manager
 
 

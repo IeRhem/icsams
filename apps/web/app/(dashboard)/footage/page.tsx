@@ -1,3 +1,11 @@
+import {
+  IconBookmark,
+  IconDeviceFloppy,
+  IconPlayerPause,
+  IconPlayerSkipBack,
+  IconPlayerSkipForward,
+} from "@tabler/icons-react";
+
 export default function FootagePage() {
   const recordedSegments = [
     { time: "14:30 - 14:45", events: "1 Critical Alert", size: "1.4 GB", status: "FLAGGED" },
@@ -89,14 +97,17 @@ export default function FootagePage() {
           {/* Buttons row */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-white">
-                ◀◀ 10s
+              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-white flex items-center gap-1">
+                <IconPlayerSkipBack className="size-3.5" />
+                <span>10s</span>
               </button>
-              <button className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white">
-                Pause ❚❚
+              <button className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white flex items-center gap-1.5">
+                <IconPlayerPause className="size-3.5" />
+                <span>Pause</span>
               </button>
-              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-white">
-                10s ▶▶
+              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-white flex items-center gap-1">
+                <span>10s</span>
+                <IconPlayerSkipForward className="size-3.5" />
               </button>
               <div className="flex items-center gap-1 pl-2">
                 <button className="px-2 py-1 rounded bg-zinc-800 text-[11px] text-zinc-300">1x</button>
@@ -106,11 +117,13 @@ export default function FootagePage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-200 transition-colors">
-                🔖 Bookmark Timestamp
+              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-200 transition-colors flex items-center gap-1.5">
+                <IconBookmark className="size-3.5" />
+                <span>Bookmark Timestamp</span>
               </button>
-              <button className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs font-medium text-white transition-colors">
-                💾 Export MP4 Clip
+              <button className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs font-medium text-white transition-colors flex items-center gap-1.5">
+                <IconDeviceFloppy className="size-3.5" />
+                <span>Export MP4 Clip</span>
               </button>
             </div>
           </div>
