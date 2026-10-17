@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearAuthSession } from "./auth";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
@@ -45,15 +46,8 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== "undefined") {
       const isAuthRoute = window.location.pathname.startsWith("/auth/");
       if (!isAuthRoute) {
-        // Clear expired or invalidated session data
-        localStorage.removeItem("token");
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("access_token");
-        document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        clearAuthSession();
+        window.location.href = "/auth/login";
       }
     }
     return Promise.reject(error);

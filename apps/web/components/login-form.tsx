@@ -29,14 +29,14 @@ import { loginWithApi, parseApiError } from "@/lib/auth"
 function getSafeRedirectUrl(target: string | null | undefined): string {
   if (!target || typeof target !== "string") return "/"
   try {
-    const decoded = decodeURIComponent(target).trim()
-    if (!decoded) return "/"
+    const raw = target.trim()
+    if (!raw) return "/"
 
     // Preserve rejection of protocol-relative and backslash-prefixed redirects
     if (
-      decoded.startsWith("//") ||
-      decoded.startsWith("/\\") ||
-      decoded.startsWith("\\")
+      raw.startsWith("//") ||
+      raw.startsWith("/\\") ||
+      raw.startsWith("\\")
     ) {
       return "/"
     }
@@ -46,7 +46,7 @@ function getSafeRedirectUrl(target: string | null | undefined): string {
         ? window.location.origin
         : "http://localhost:3000"
 
-    const parsed = new URL(decoded, currentOrigin)
+    const parsed = new URL(raw, currentOrigin)
 
     // Accept only when resolved origin matches the current origin
     if (parsed.origin !== currentOrigin) {
@@ -181,9 +181,8 @@ export function LoginForm({
                       className="pl-9 pr-9"
                     />
                     <IconLock className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                    <button
+                    <Button
                       type="button"
-                      tabIndex={-1}
                       onClick={() => setShowPassword((prev) => !prev)}
                       aria-label={showPassword ? "Hide password" : "Show password"}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -193,7 +192,7 @@ export function LoginForm({
                       ) : (
                         <IconEye className="size-4" />
                       )}
-                    </button>
+                    </Button>
                   </div>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />

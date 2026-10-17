@@ -141,16 +141,9 @@ export async function loginWithApi(data: LoginFormValues): Promise<AuthSession> 
   let userProfile: UserOut;
   try {
     userProfile = await fetchCurrentUser();
-  } catch {
-    // If fetching profile fails, generate a fallback user profile from credentials and role
-    userProfile = {
-      id: 0,
-      name: data.email.split("@")[0] || "User",
-      email: data.email,
-      role: tokenData.role,
-      is_active: true,
-      created_at: new Date().toISOString(),
-    };
+  } catch (error) {
+    clearAuthSession();
+    throw error;
   }
 
   // Store final session with user details

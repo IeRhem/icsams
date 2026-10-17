@@ -136,10 +136,13 @@ export default function SettingsPage() {
     try {
       const profile = await fetchCurrentUser();
       setUser(profile);
-      profileForm.reset({
-        name: profile.name,
-        email: profile.email,
-      });
+      profileForm.reset(
+        {
+          name: profile.name,
+          email: profile.email,
+        },
+        { keepDirtyValues: true }
+      );
     } catch {
       // If fetching fails but we have cached user, maintain cached
     } finally {
@@ -675,7 +678,12 @@ export default function SettingsPage() {
                   <label className="text-muted-foreground font-medium">ML Pipeline WebSocket Stream</label>
                   <Input
                     type="text"
-                    defaultValue="ws://localhost:8000/ws"
+                    defaultValue={
+                      (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000")
+                        .replace(/^https:\/\//i, "wss://")
+                        .replace(/^http:\/\//i, "ws://")
+                        .replace(/\/+$/, "") + "/ws"
+                    }
                     className="font-mono text-xs"
                     readOnly
                   />
@@ -737,12 +745,15 @@ export default function SettingsPage() {
                     <div className="font-medium text-foreground">Retention Period</div>
                     <div className="text-muted-foreground text-[11px]">Automatically prune recordings older than selected period</div>
                   </div>
-                  <select className="bg-input/30 border border-input rounded-md px-3 py-1.5 text-xs text-foreground outline-none focus:border-ring">
-                    <option>30 Days</option>
-                    <option>60 Days</option>
-                    <option>90 Days</option>
-                    <option>180 Days</option>
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <select disabled className="bg-input/20 border border-input rounded-md px-3 py-1.5 text-xs text-muted-foreground outline-none cursor-not-allowed opacity-60">
+                      <option>30 Days</option>
+                      <option>60 Days</option>
+                      <option>90 Days</option>
+                      <option>180 Days</option>
+                    </select>
+                    <Badge variant="outline" className="text-[10px]">Coming Soon</Badge>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -753,17 +764,22 @@ export default function SettingsPage() {
         <TabsContent value="dispatch" className="space-y-6 pt-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Alert Dispatch & Webhooks</CardTitle>
-              <CardDescription>Notification triggers and incident webhook integrations</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold">Alert Dispatch & Webhooks</CardTitle>
+                  <CardDescription>Notification triggers and incident webhook integrations</CardDescription>
+                </div>
+                <Badge variant="outline" className="text-xs">Coming Soon</Badge>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3 text-xs">
+              <div className="space-y-3 text-xs opacity-60">
                 <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
                   <div>
                     <div className="font-medium text-foreground">Push Notifications to Mobile Guards</div>
                     <div className="text-muted-foreground text-[11px]">Send instant priority alerts when critical intrusions occur</div>
                   </div>
-                  <Checkbox defaultChecked />
+                  <Checkbox defaultChecked disabled />
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
@@ -771,7 +787,7 @@ export default function SettingsPage() {
                     <div className="font-medium text-foreground">Email Digest Dispatch</div>
                     <div className="text-muted-foreground text-[11px]">Forward hourly security digests to on-duty supervisors</div>
                   </div>
-                  <Checkbox defaultChecked />
+                  <Checkbox defaultChecked disabled />
                 </div>
 
                 <div className="space-y-1.5 pt-2">
@@ -780,13 +796,14 @@ export default function SettingsPage() {
                     type="text"
                     placeholder="https://hooks.slack.com/services/..."
                     className="font-mono text-xs"
+                    disabled
                   />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end pt-4 border-t border-border">
-              <Button size="sm" onClick={() => toast.success("Dispatch policies saved")}>
-                Save Dispatch Settings
+              <Button size="sm" disabled>
+                Unavailable (Coming Soon)
               </Button>
             </CardFooter>
           </Card>

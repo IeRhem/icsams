@@ -20,7 +20,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     # Find user by email
     user = db.query(User).filter(User.email == payload.email).first()
 
-    if not user or not verify_password(payload.password, user.password_hash):
+    password_bytes = payload.password.encode("utf-8")
+    if len(password_bytes) > 72 or not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -132,7 +133,8 @@ def update_me(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Current password is required to change password",
             )
-        if not verify_password(payload.current_password, current_user.password_hash):
+        current_password_bytes = payload.current_password.encode("utf-8")
+        if len(current_password_bytes) > 72 or not verify_password(payload.current_password, current_user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Current password is incorrect",
@@ -141,6 +143,12 @@ def update_me(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="New password must be at least 6 characters",
+            )
+        new_password_bytes = payload.new_password.encode("utf-8")
+        if len(new_password_bytes) > 72:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password cannot exceed 72 bytes",
             )
         current_user.password_hash = hash_password(payload.new_password)
 
