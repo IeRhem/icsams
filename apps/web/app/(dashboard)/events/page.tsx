@@ -1,4 +1,16 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function EventsPage() {
   const events = [
@@ -9,7 +21,7 @@ export default function EventsPage() {
       duration: "14s",
       objects: "Vehicle (Van), Person (1)",
       time: "14:41:05",
-      severity: "LOW",
+      severity: "LOW" as const,
     },
     {
       id: "EVT-9101",
@@ -18,7 +30,7 @@ export default function EventsPage() {
       duration: "48s",
       objects: "Person (Unknown)",
       time: "14:32:08",
-      severity: "CRITICAL",
+      severity: "CRITICAL" as const,
     },
     {
       id: "EVT-9098",
@@ -27,7 +39,7 @@ export default function EventsPage() {
       duration: "10m 22s",
       objects: "Backpack / Package",
       time: "14:18:40",
-      severity: "HIGH",
+      severity: "HIGH" as const,
     },
     {
       id: "EVT-9094",
@@ -36,7 +48,7 @@ export default function EventsPage() {
       duration: "4s",
       objects: "Staff: Marcus Vance (ID: 4402)",
       time: "14:02:18",
-      severity: "INFO",
+      severity: "INFO" as const,
     },
     {
       id: "EVT-9090",
@@ -45,74 +57,81 @@ export default function EventsPage() {
       duration: "32s",
       objects: "Keycard Access Granted",
       time: "13:43:55",
-      severity: "INFO",
+      severity: "INFO" as const,
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Event Log Stream</h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground font-heading">
+            Event Log Stream
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Historical computer vision detections, object tracking events, and sensory triggers.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <input
+          <Input
             type="text"
             placeholder="Search events or cameras..."
-            className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+            className="w-56"
           />
-          <button className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-200 transition-colors">
+          <Button variant="outline" size="sm">
             Export CSV
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Events Table */}
-      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/60">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-900 border-b border-zinc-800 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-            <tr>
-              <th className="px-5 py-3">Event ID</th>
-              <th className="px-5 py-3">Classification</th>
-              <th className="px-5 py-3">Camera Source</th>
-              <th className="px-5 py-3">Detected Entities</th>
-              <th className="px-5 py-3">Duration</th>
-              <th className="px-5 py-3">Timestamp</th>
-              <th className="px-5 py-3 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800/70 text-zinc-300">
+      <Card className="p-0 overflow-hidden min-w-0 max-w-full">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[120px]">Event ID</TableHead>
+              <TableHead>Classification</TableHead>
+              <TableHead>Camera Source</TableHead>
+              <TableHead>Detected Entities</TableHead>
+              <TableHead>Duration</TableHead>
+              <TableHead>Timestamp</TableHead>
+              <TableHead className="text-right">Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {events.map((evt) => (
-              <tr key={evt.id} className="hover:bg-zinc-800/40 transition-colors">
-                <td className="px-5 py-4 font-mono text-xs font-medium text-blue-400">
+              <TableRow key={evt.id}>
+                <TableCell className="font-mono text-xs font-semibold text-primary">
                   <Link href={`/events/${evt.id.toLowerCase()}`} className="hover:underline">
                     {evt.id}
                   </Link>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="font-medium text-white">{evt.type}</span>
-                </td>
-                <td className="px-5 py-4 text-xs text-zinc-400">{evt.camera}</td>
-                <td className="px-5 py-4 text-xs text-zinc-300">{evt.objects}</td>
-                <td className="px-5 py-4 text-xs font-mono text-zinc-400">{evt.duration}</td>
-                <td className="px-5 py-4 text-xs text-zinc-400">{evt.time}</td>
-                <td className="px-5 py-4 text-right">
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground">{evt.type}</span>
+                    {evt.severity === "CRITICAL" && (
+                      <Badge variant="destructive" className="text-[10px]">Critical</Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">{evt.camera}</TableCell>
+                <TableCell className="text-xs text-foreground">{evt.objects}</TableCell>
+                <TableCell className="text-xs font-mono text-muted-foreground">{evt.duration}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{evt.time}</TableCell>
+                <TableCell className="text-right">
                   <Link
                     href={`/events/${evt.id.toLowerCase()}`}
-                    className="text-xs px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors"
+                    className={buttonVariants({ variant: "outline", size: "xs" })}
                   >
                     Inspect
                   </Link>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

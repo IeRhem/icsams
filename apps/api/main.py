@@ -5,6 +5,7 @@ from core.config import settings
 from routers import auth, alerts, events, cameras, users
 from core.database import Base, engine, SessionLocal
 from core.security import decode_access_token
+import models
 from models import User
 from ws.manager import manager
 

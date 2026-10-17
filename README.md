@@ -1,6 +1,6 @@
 # ICSAMS — Intelligent Campus Security and Access Monitoring System
 
-> Final Year Project · Federal University Wukari, Taraba State · 2024/2025  
+> Final Year Project · Federal University Wukari, Taraba State · 2024/2025
 > **JOSEPH, Rhema Elyon** · CIS/CSC/22/071 · B.Sc. Computer Science (Software Engineering)
 
 An end-to-end intelligent campus security platform that integrates IoT hardware, deep learning video analysis, and a role-based web dashboard to provide Nigerian university security teams with automated real-time monitoring and structured investigation support.
@@ -23,8 +23,11 @@ ICSAMS replaces reactive, paper-based campus security with a three-layer system:
 |---|---|
 | Dashboard (Frontend) | Next.js 14.2, TypeScript 5.5, Tailwind CSS 3.4 |
 | Backend API | FastAPI 0.115, Python 3.12 |
+| Database ORM (API) | SQLAlchemy 2.x + psycopg2 |
+| Database (Hosted) | Supabase (PostgreSQL 16) |
 | ML Pipeline | PyTorch 2.4, Ultralytics YOLOv8 8.3, OpenCV 4.10 |
-| Database | PostgreSQL 16 + Prisma ORM 5.19 |
+| Auth | JWT via python-jose + passlib (bcrypt) |
+| Real-time | WebSocket (FastAPI native) |
 | Monorepo | Turborepo + pnpm workspaces |
 | IoT Firmware | Arduino IDE 2.3 (ESP32) |
 | Statistical Eval | scikit-learn 1.5, SciPy 1.14 |
@@ -36,16 +39,46 @@ ICSAMS replaces reactive, paper-based campus security with a three-layer system:
 ```
 icsams/
 ├── apps/
-│   ├── web/                  # Next.js dashboard (Guard, Officer, CSO views)
-│   └── api/                  # FastAPI backend (REST + WebSocket)
+│   ├── web/                        # Next.js 14.2 dashboard
+│   │   ├── app/
+│   │   │   ├── (auth)/login/
+│   │   │   ├── guard/              # Guard dashboard pages
+│   │   │   ├── officer/            # Investigation officer pages
+│   │   │   └── cso/                # Chief security officer pages
+│   │   └── .env.local
+│   │
+│   └── api/                        # FastAPI backend
+│       ├── main.py                 # App entry point, table creation, routes
+│       ├── requirements.txt
+│       ├── .env
+│       ├── core/
+│       │   ├── config.py           # Pydantic settings from .env
+│       │   ├── database.py         # SQLAlchemy engine, SessionLocal, Base
+│       │   └── security.py         # JWT encode/decode, bcrypt hashing
+│       ├── models/
+│       │   ├── __init__.py         # SQLAlchemy table models + enums
+│       │   └── schemas.py          # Pydantic request/response schemas
+│       ├── routers/
+│       │   ├── auth.py             # Login, get_current_user, role guards
+│       │   ├── alerts.py           # Alert CRUD + WebSocket broadcast
+│       │   ├── events.py           # Event logging + queries
+│       │   ├── cameras.py          # Camera + location management
+│       │   └── users.py            # User management (CSO only)
+│       └── ws/
+│           └── manager.py          # WebSocket ConnectionManager singleton
+│
 ├── packages/
-│   ├── database/             # Prisma schema + generated client
-│   ├── types/                # Shared TypeScript types
-│   ├── ui/                   # Shared React components
-│   └── config/               # Shared tsconfig, tailwind, eslint configs
+│   ├── types/                      # Shared TypeScript types (Alert, Event, User)
+│   ├── ui/                         # Shared React components
+│   └── config/                     # Shared tsconfig, tailwind, eslint
+│
 ├── services/
-│   └── ml/                   # Python ML pipeline (YOLOv8 + CNN-LSTM + AE)
-├── firmware/                 # ESP32-CAM, PIR sensor, BLE beacon firmware
+│   └── ml/                         # Python ML pipeline (YOLOv8 + CNN-LSTM + AE)
+│       ├── pipeline.py
+│       ├── requirements.txt
+│       └── models/                 # Trained model weights (.pt / .pth)
+│
+├── firmware/                       # ESP32-CAM, PIR sensor, BLE beacon firmware
 ├── turbo.json
 ├── package.json
 └── pnpm-workspace.yaml
@@ -55,13 +88,13 @@ icsams/
 
 ## Prerequisites
 
-Make sure you have the following installed:
-
 - [Node.js](https://nodejs.org/) >= 20.x
 - [pnpm](https://pnpm.io/) >= 9.x — `npm install -g pnpm`
 - [Python](https://www.python.org/) >= 3.12
-- [PostgreSQL](https://www.postgresql.org/) >= 16
 - [Git](https://git-scm.com/)
+- A [Supabase](https://supabase.com/) project (free tier works)
+
+> No local PostgreSQL installation needed — Supabase is the hosted database.
 
 ---
 
@@ -70,7 +103,7 @@ Make sure you have the following installed:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/lerhem/icsams.git
+git clone https://github.com/IeRhem/icsams.git
 cd icsams
 ```
 
@@ -82,47 +115,65 @@ pnpm install
 
 ### 3. Set up environment variables
 
-Copy the example env files and fill in your values:
-
 ```bash
 cp apps/web/.env.example apps/web/.env.local
 cp apps/api/.env.example apps/api/.env
+cp services/ml/.env.example services/ml/.env
 ```
 
-See [Environment Variables](#environment-variables) below for what each value should be.
+Fill in your values — see [Environment Variables](#environment-variables) below.
 
-### 4. Set up the database
+### 4. Set up the FastAPI Python environment
 
 ```bash
-# Generate Prisma client
-pnpm db:generate
+cd apps/api
+python -m venv venv
+source venv/bin/activate        # Linux/macOS
+# venv\Scripts\activate         # Windows
 
-# Push schema to your PostgreSQL database
-pnpm db:push
+pip install -r requirements.txt
 ```
 
-### 5. Set up the Python environment
+### 5. Set up the ML Python environment
 
 ```bash
 cd services/ml
 python -m venv venv
-source venv/bin/activate      # Linux/macOS
-# venv\Scripts\activate       # Windows
-
+source venv/bin/activate
 pip install -r requirements.txt
+```
+
+### 6. Create database tables
+
+Tables are created automatically by SQLAlchemy when the FastAPI server starts for the first time:
+
+```bash
+cd apps/api
+source venv/bin/activate
+uvicorn main:app --reload --port 8000
+```
+
+Check your Supabase dashboard → **Table Editor** — all six tables will appear: `users`, `locations`, `cameras`, `events`, `detections`, `alerts`.
+
+### 7. Seed the first CSO user
+
+Add the seed function to `main.py` temporarily (see Getting Started guide), start the server once, then remove it. This creates:
+
+```
+Email:    cso@fuwukari.edu.ng
+Password: changeme123
+Role:     cso
 ```
 
 ---
 
 ## Running the Project
 
-### Development (all JS apps in parallel)
+### Next.js dashboard
 
 ```bash
 pnpm dev
 ```
-
-This starts `apps/web` (Next.js) and any other JS apps concurrently via Turborepo.
 
 ### FastAPI backend (separate terminal)
 
@@ -140,13 +191,6 @@ source venv/bin/activate
 python pipeline.py
 ```
 
-### Individual apps
-
-```bash
-pnpm --filter @icsams/web dev      # Next.js dashboard only
-pnpm --filter @icsams/api dev      # Not applicable — run uvicorn directly
-```
-
 ---
 
 ## Environment Variables
@@ -154,40 +198,43 @@ pnpm --filter @icsams/api dev      # Not applicable — run uvicorn directly
 ### `apps/web/.env.local`
 
 ```env
-# Database (used by Prisma)
-DATABASE_URL="postgresql://user:password@localhost:5432/icsams"
-
-# Auth
-AUTH_SECRET="your-secret-key-here"
-AUTH_URL="http://localhost:3000"
-
 # API
 NEXT_PUBLIC_API_URL="http://localhost:8000"
 NEXT_PUBLIC_WS_URL="ws://localhost:8000/ws"
+
+# Auth (Next.js side — for session cookies)
+AUTH_SECRET="your-nextjs-auth-secret"
+AUTH_URL="http://localhost:3000"
 ```
 
 ### `apps/api/.env`
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/icsams"
-SECRET_KEY="your-jwt-secret-key"
+# Supabase PostgreSQL — get this from:
+# Supabase Dashboard → Project Settings → Database → Connection string → Session mode
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres"
+
+# JWT
+SECRET_KEY="your-long-random-secret-key"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=480
 
+# CORS — Next.js dev URL
+ALLOWED_ORIGINS=["http://localhost:3000"]
+
 # ML service
 ML_SERVICE_URL="http://localhost:8001"
-
-# CORS
-ALLOWED_ORIGINS="http://localhost:3000"
 ```
+
+> **Important:** Use Supabase Session mode (port 5432), not Transaction mode (port 6543). Transaction mode breaks SQLAlchemy prepared statements.
 
 ### `services/ml/.env`
 
 ```env
-# Camera stream
-CAMERA_STREAM_URL="http://192.168.x.x/stream"  # ESP32-CAM IP
+# ESP32-CAM stream URL (find via Arduino Serial Monitor after flashing)
+CAMERA_STREAM_URL="http://192.168.x.x/stream"
 
-# Model paths
+# Trained model weights
 YOLOV8_MODEL_PATH="models/yolov8n.pt"
 CNN_LSTM_MODEL_PATH="models/cnn_lstm.pth"
 AUTOENCODER_MODEL_PATH="models/autoencoder.pth"
@@ -196,18 +243,121 @@ AUTOENCODER_MODEL_PATH="models/autoencoder.pth"
 SUSPICIOUS_THRESHOLD=0.40
 CRITICAL_THRESHOLD=0.70
 
-# API
+# FastAPI URL (for posting events and alerts)
 API_URL="http://localhost:8000"
 ```
 
 ---
 
-## API Documentation
+## API Reference
 
-Once the FastAPI server is running, interactive API docs are available at:
+Swagger UI: `http://localhost:8000/docs`
+ReDoc: `http://localhost:8000/redoc`
 
-- **Swagger UI** → http://localhost:8000/docs
-- **ReDoc** → http://localhost:8000/redoc
+### Auth
+
+| Method | Route | Access | Description |
+|---|---|---|---|
+| POST | `/auth/login` | Public | Returns JWT token + role |
+| GET | `/auth/me` | All roles | Returns current user profile |
+
+### Users
+
+| Method | Route | Access | Description |
+|---|---|---|---|
+| POST | `/users/` | CSO | Create a new user account |
+| GET | `/users/` | CSO | List all users |
+| PATCH | `/users/{id}/deactivate` | CSO | Deactivate a user account |
+
+### Alerts
+
+| Method | Route | Access | Description |
+|---|---|---|---|
+| POST | `/alerts/` | ML Pipeline | Create alert + broadcast via WebSocket |
+| GET | `/alerts/active` | Guard+ | Unacknowledged suspicious/critical alerts |
+| GET | `/alerts/` | Officer+ | All alerts with filters (date, camera, risk level) |
+| GET | `/alerts/{id}` | Guard+ | Single alert detail |
+| PATCH | `/alerts/{id}/acknowledge` | Guard+ | Acknowledge + clear from active panel |
+
+### Events
+
+| Method | Route | Access | Description |
+|---|---|---|---|
+| POST | `/events/` | ML Pipeline | Log a detection event |
+| GET | `/events/` | Officer+ | Query events with filters |
+| GET | `/events/{id}` | Officer+ | Single event with detections + alert |
+| PATCH | `/events/{id}/processed` | Officer+ | Mark event as reviewed |
+
+### Cameras & Locations
+
+| Method | Route | Access | Description |
+|---|---|---|---|
+| POST | `/cameras/locations` | CSO | Register a new campus location |
+| GET | `/cameras/locations` | Guard+ | List all locations |
+| POST | `/cameras/` | CSO | Register a new camera |
+| GET | `/cameras/` | Guard+ | List active cameras |
+| PATCH | `/cameras/{id}/deactivate` | CSO | Deactivate a camera |
+
+### WebSocket
+
+| Route | Description |
+|---|---|
+| `WS /ws` | Real-time alert stream for dashboard clients |
+
+**WebSocket message types:**
+
+```json
+// New alert generated
+{ "type": "new_alert", "alert_id": 1, "risk_level": "critical", "behaviour_class": "Fighting", "anomaly_score": 0.87, "camera_id": 2, "created_at": "..." }
+
+// Alert acknowledged by guard
+{ "type": "alert_acknowledged", "alert_id": 1, "acknowledged_by": "Guard Name", "acknowledged_at": "..." }
+```
+
+---
+
+## Database Schema
+
+Six tables managed by SQLAlchemy. Tables are auto-created on first server start.
+
+```
+users         → id, name, email, password_hash, role, created_at, is_active
+locations     → id, location_name, sensitivity_level, incident_count, latitude, longitude
+cameras       → id, location_id (FK), camera_name, ip_address, is_active, installed_at
+events        → id, camera_id (FK), event_time, frame_count, person_count, raw_features, processed
+detections    → id, event_id (FK), frame_number, bbox_x1, bbox_y1, bbox_x2, bbox_y2, object_class, confidence
+alerts        → id, event_id (FK), acknowledged_by (FK), risk_level, anomaly_score, cls_confidence, behaviour_class, created_at, acknowledged_at
+```
+
+**Enums:**
+- `UserRole` → `guard` | `officer` | `cso`
+- `SensitivityLevel` → `low` | `medium` | `high`
+- `RiskLevel` → `normal` | `suspicious` | `critical`
+
+---
+
+## Role-Based Access Control
+
+Three roles with hierarchical access. Enforced at the FastAPI route level via `Depends()`.
+
+| Role | Capabilities |
+|---|---|
+| **guard** | Live alerts, acknowledge alerts, view cameras and locations |
+| **officer** | Everything guard can + query events, footage review, export PDF reports |
+| **cso** | Everything officer can + user management, camera registration, alert threshold config, analytics |
+
+Route protection example:
+
+```python
+# Guard and above
+@router.get("/active", dependencies=[Depends(require_guard)])
+
+# Officer and above
+@router.get("/", dependencies=[Depends(require_officer)])
+
+# CSO only
+@router.post("/", dependencies=[Depends(require_cso)])
+```
 
 ---
 
@@ -223,71 +373,71 @@ ESP32-CAM → YOLOv8 (detection) → CNN (features) → LSTM (temporal) → Risk
 **Risk scoring formula:**
 
 ```
-RS = 0.35 × P_c + 0.35 × A_n + 0.15 × w_time + 0.15 × w_loc
+RS = 0.35 × P_c  +  0.35 × A_n  +  0.15 × w_time  +  0.15 × w_loc
 
-Normal     if RS < 0.40
-Suspicious if 0.40 ≤ RS < 0.70
-Critical   if RS ≥ 0.70
+Normal      if RS < 0.40
+Suspicious  if 0.40 ≤ RS < 0.70
+Critical    if RS ≥ 0.70
 ```
 
----
-
-## Dashboard Roles
-
-| Role | Access |
-|---|---|
-| **Security Guard** | Live camera feeds, real-time alerts, alert acknowledgement |
-| **Investigation Officer** | Historical event queries, anomaly timelines, footage review, PDF reports |
-| **Chief Security Officer** | All officer capabilities + user management, camera config, threshold tuning, analytics |
+The ML pipeline posts to `/events/` and `/alerts/` via HTTP after processing each frame sequence.
 
 ---
 
-## Database Schema
+## Dashboard Pages
 
-Six primary tables: `users`, `locations`, `cameras`, `events`, `detections`, `alerts`.
+```
+/login                          # Public — JWT auth
 
-Prisma schema is located at `packages/database/prisma/schema.prisma`.
+/guard/dashboard                # Live cameras + active alert panel
+/guard/alerts                   # Alert list
+/guard/alerts/[id]              # Alert detail + acknowledge button
 
-```bash
-# View schema
-cat packages/database/prisma/schema.prisma
+/officer/events                 # Event query (date, location, risk filter)
+/officer/events/[id]            # Event detail + detection overlays
+/officer/footage                # Camera footage review
+/officer/anomaly-report         # Anomaly score trends per location
+/officer/reports                # PDF report export
 
-# Open Prisma Studio (GUI)
-pnpm db:studio
+/cso/analytics                  # System-wide incident analytics
+/cso/users                      # User management
+/cso/cameras                    # Camera + location management
+/cso/thresholds                 # Alert threshold + weight configuration
+
+/settings                       # Profile + account settings
 ```
 
 ---
 
 ## Firmware
 
-ESP32 firmware is in the `firmware/` directory:
-
 ```
 firmware/
-├── esp32-cam/        # Camera streaming firmware (MJPEG over HTTP)
-├── pir-sensor/       # PIR motion detection + WiFi event push
-└── ble-beacon/       # BLE beacon broadcasting location ID
+├── esp32-cam/        # MJPEG stream over HTTP (OV2640)
+├── pir-sensor/       # PIR motion detection + HTTP event push to API
+└── ble-beacon/       # BLE advertisement with unique location UUID
 ```
 
-Flash using Arduino IDE 2.3. See `firmware/README.md` for wiring diagrams and upload instructions.
+Flash using Arduino IDE 2.3. Board: `AI Thinker ESP32-CAM`. See `firmware/README.md` for pin wiring and upload steps.
 
 ---
 
 ## Dataset
 
-This project uses the **UCF-Crime Dataset** for training and evaluation.
+**UCF-Crime Dataset** — primary benchmark for training and evaluation.
 
-- **Source:** [UCF Center for Research in Computer Vision](https://www.crcv.ucf.edu/research/real-world-anomaly-detection/)
+- **Source:** [UCF CRCV](https://www.crcv.ucf.edu/research/real-world-anomaly-detection/)
 - **Videos:** 1,900 (950 normal + 950 anomalous, 13 crime categories)
+- **Split:** 70% train · 15% validation · 15% test
 - **License:** Academic research use only
 
 ```bash
-# After downloading, place videos in:
 services/ml/data/ucf-crime/
 ├── Normal/
 └── Anomaly/
     ├── Assault/
     ├── Fighting/
+    ├── Robbery/
     └── ...
 ```
 
@@ -303,16 +453,25 @@ services/ml/data/ucf-crime/
 | Chapter 4 — System Design & Implementation | 🔄 In Progress |
 | Chapter 5 — Summary, Conclusion & Recommendation | ⏳ Pending |
 
+| Component | Status |
+|---|---|
+| FastAPI backend (auth, alerts, events, cameras, users) | ✅ Complete |
+| WebSocket real-time alert broadcasting | ✅ Complete |
+| SQLAlchemy models + Supabase connection | ✅ Complete |
+| Next.js dashboard (frontend) | 🔄 In Progress |
+| ML pipeline (YOLOv8 + CNN-LSTM + AE) | ⏳ Pending |
+| ESP32 firmware | ⏳ Pending |
+
 ---
 
 ## Supervisor
 
-Department of Computer Science  
+Department of Computer Science
 Federal University Wukari, Taraba State
 
 ---
 
 ## License
 
-This project is developed for academic research purposes only.  
+This project is developed for academic research purposes only.
 All rights reserved © 2025 JOSEPH, Rhema Elyon.

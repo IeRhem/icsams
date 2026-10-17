@@ -1,3 +1,7 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   IconBookmark,
   IconDeviceFloppy,
@@ -8,68 +12,70 @@ import {
 
 export default function FootagePage() {
   const recordedSegments = [
-    { time: "14:30 - 14:45", events: "1 Critical Alert", size: "1.4 GB", status: "FLAGGED" },
-    { time: "14:15 - 14:30", events: "1 High Warning", size: "1.4 GB", status: "FLAGGED" },
-    { time: "14:00 - 14:15", events: "Continuous Rec", size: "1.3 GB", status: "NORMAL" },
-    { time: "13:45 - 14:00", events: "Continuous Rec", size: "1.3 GB", status: "NORMAL" },
-    { time: "13:30 - 13:45", events: "1 Access Event", size: "1.4 GB", status: "NORMAL" },
+    { time: "14:30 - 14:45", events: "1 Critical Alert", size: "1.4 GB", status: "FLAGGED" as const },
+    { time: "14:15 - 14:30", events: "1 High Warning", size: "1.4 GB", status: "FLAGGED" as const },
+    { time: "14:00 - 14:15", events: "Continuous Rec", size: "1.3 GB", status: "NORMAL" as const },
+    { time: "13:45 - 14:00", events: "Continuous Rec", size: "1.3 GB", status: "NORMAL" as const },
+    { time: "13:30 - 13:45", events: "1 Access Event", size: "1.4 GB", status: "NORMAL" as const },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Footage Playback & Archive</h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground font-heading">
+            Footage Playback & Archive
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Browse, scrub, and export NVR continuous recordings and incident clips.
           </p>
         </div>
 
         {/* Filter controls */}
         <div className="flex flex-wrap items-center gap-2">
-          <select className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500">
+          <select className="bg-input/30 border border-input rounded-md px-3 py-1.5 text-xs text-foreground outline-none focus:border-ring">
             <option>CAM-04 (North Perimeter Fence)</option>
             <option>CAM-01 (Main Entrance Gate)</option>
             <option>CAM-02 (Loading Dock B)</option>
             <option>CAM-07 (Server Room East)</option>
           </select>
-          <input
+          <Input
             type="date"
             defaultValue="2026-10-15"
-            className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-blue-500"
+            className="w-36 text-xs h-8"
           />
         </div>
       </div>
 
       {/* Main Video Player */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
+      <Card className="p-0 overflow-hidden">
         <div className="aspect-video bg-zinc-950 relative flex flex-col justify-between p-4">
           <div className="flex items-center justify-between text-xs text-zinc-300 font-mono">
-            <div className="flex items-center gap-2 bg-black/60 px-2.5 py-1 rounded">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <div className="flex items-center gap-2 bg-black/60 px-2.5 py-1 rounded backdrop-blur-xs">
+              <span className="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>PLAYING: CAM-04 (NORTH PERIMETER)</span>
             </div>
-            <div className="bg-black/60 px-2.5 py-1 rounded">2026-10-15 14:32:10 UTC</div>
+            <div className="bg-black/60 px-2.5 py-1 rounded backdrop-blur-xs">2026-10-15 14:32:10 UTC</div>
           </div>
 
-          <div className="text-center font-mono text-zinc-600 select-none text-sm">
+          <div className="text-center font-mono text-muted-foreground select-none text-sm">
             [ARCHIVED RECORDING STREAM]
           </div>
 
           <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-mono bg-black/60 px-2 py-0.5 rounded">H.265 • 30 FPS • 4K</span>
-            <span className="font-mono bg-black/60 px-2 py-0.5 rounded">Scrub Position: 00:32:10 / 01:00:00</span>
+            <span className="font-mono bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">H.265 • 30 FPS • 4K</span>
+            <span className="font-mono bg-black/60 px-2 py-0.5 rounded backdrop-blur-xs">Scrub Position: 00:32:10 / 01:00:00</span>
           </div>
         </div>
 
         {/* Player Controls & Scrubber */}
-        <div className="p-4 bg-zinc-900 border-t border-zinc-800 space-y-3">
+        <div className="p-4 border-t border-border bg-card space-y-3">
           {/* Timeline Bar with Event Markers */}
           <div className="space-y-1">
-            <div className="relative h-6 bg-zinc-950 rounded border border-zinc-800 flex items-center px-1">
+            <div className="relative h-6 bg-muted/40 rounded border border-border flex items-center px-1">
               {/* Event highlight segments */}
               <div
-                className="absolute h-full bg-red-500/40 border-l-2 border-r-2 border-red-500 rounded"
+                className="absolute h-full bg-destructive/40 border-l-2 border-r-2 border-destructive rounded"
                 style={{ left: "53%", width: "4%" }}
                 title="Critical Anomaly"
               />
@@ -81,11 +87,11 @@ export default function FootagePage() {
 
               {/* Scrubber pointer */}
               <div
-                className="absolute top-0 bottom-0 w-1 bg-blue-500 shadow-md shadow-blue-500"
+                className="absolute top-0 bottom-0 w-1 bg-primary shadow-xs shadow-primary"
                 style={{ left: "54%" }}
               />
             </div>
-            <div className="flex justify-between text-[10px] font-mono text-zinc-500">
+            <div className="flex justify-between text-[10px] font-mono text-muted-foreground">
               <span>14:00:00</span>
               <span>14:15:00</span>
               <span>14:30:00</span>
@@ -97,67 +103,68 @@ export default function FootagePage() {
           {/* Buttons row */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-white flex items-center gap-1">
+              <Button variant="outline" size="sm" className="gap-1">
                 <IconPlayerSkipBack className="size-3.5" />
                 <span>10s</span>
-              </button>
-              <button className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white flex items-center gap-1.5">
+              </Button>
+              <Button size="sm" className="gap-1.5 font-semibold">
                 <IconPlayerPause className="size-3.5" />
                 <span>Pause</span>
-              </button>
-              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-white flex items-center gap-1">
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1">
                 <span>10s</span>
                 <IconPlayerSkipForward className="size-3.5" />
-              </button>
+              </Button>
               <div className="flex items-center gap-1 pl-2">
-                <button className="px-2 py-1 rounded bg-zinc-800 text-[11px] text-zinc-300">1x</button>
-                <button className="px-2 py-1 rounded bg-zinc-800/40 text-[11px] text-zinc-500">2x</button>
-                <button className="px-2 py-1 rounded bg-zinc-800/40 text-[11px] text-zinc-500">4x</button>
+                <Button variant="secondary" size="xs">1x</Button>
+                <Button variant="ghost" size="xs">2x</Button>
+                <Button variant="ghost" size="xs">4x</Button>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-200 transition-colors flex items-center gap-1.5">
+              <Button variant="outline" size="sm" className="gap-1.5">
                 <IconBookmark className="size-3.5" />
-                <span>Bookmark Timestamp</span>
-              </button>
-              <button className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-xs font-medium text-white transition-colors flex items-center gap-1.5">
+                <span>Bookmark</span>
+              </Button>
+              <Button size="sm" className="gap-1.5">
                 <IconDeviceFloppy className="size-3.5" />
-                <span>Export MP4 Clip</span>
-              </button>
+                <span>Export Clip</span>
+              </Button>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Segments List */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-white">Archived 15-Minute Video Segments</h2>
-        <div className="divide-y divide-zinc-800/80">
-          {recordedSegments.map((seg) => (
-            <div key={seg.time} className="py-3 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-zinc-200">{seg.time}</span>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded font-mono ${
-                    seg.status === "FLAGGED"
-                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                      : "bg-zinc-800 text-zinc-400"
-                  }`}
-                >
-                  {seg.events}
-                </span>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold">Archived 15-Minute Video Segments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="divide-y divide-border">
+            {recordedSegments.map((seg) => (
+              <div key={seg.time} className="py-3 flex items-center justify-between text-xs first:pt-0 last:pb-0">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-foreground font-medium">{seg.time}</span>
+                  <Badge
+                    variant={seg.status === "FLAGGED" ? "destructive" : "secondary"}
+                    className="font-mono text-[10px]"
+                  >
+                    {seg.events}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-muted-foreground font-mono">{seg.size}</span>
+                  <Button variant="outline" size="xs">
+                    Load in Player
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-zinc-500 font-mono">{seg.size}</span>
-                <button className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors">
-                  Load in Player
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

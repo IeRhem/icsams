@@ -1,3 +1,15 @@
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { IconDownload, IconFileText, IconPlus } from "@tabler/icons-react";
+
 export default function ReportsPage() {
   const reports = [
     {
@@ -35,78 +47,62 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Compliance & Audit Reports</h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground font-heading">
+            Compliance & Audit Reports
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Export executive security summaries, incident audit logs, and hardware reliability metrics.
           </p>
         </div>
 
-        <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition-colors flex items-center gap-2">
-          <span>+</span>
+        <Button size="sm" className="gap-1.5 shrink-0">
+          <IconPlus className="size-4" />
           <span>Generate New Report</span>
-        </button>
+        </Button>
       </div>
 
       {/* Reports Table */}
-      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/60">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-900 border-b border-zinc-800 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-            <tr>
-              <th className="px-5 py-3">Report ID</th>
-              <th className="px-5 py-3">Document Title</th>
-              <th className="px-5 py-3">Coverage Period</th>
-              <th className="px-5 py-3">Author</th>
-              <th className="px-5 py-3">Format</th>
-              <th className="px-5 py-3 text-right">Download</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800/70 text-zinc-300">
+      <Card className="p-0 overflow-hidden min-w-0 max-w-full">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[140px]">Report ID</TableHead>
+              <TableHead className="min-w-[240px]">Document Title</TableHead>
+              <TableHead className="min-w-[170px]">Coverage Period</TableHead>
+              <TableHead className="min-w-[150px]">Author</TableHead>
+              <TableHead className="w-[110px]">Format</TableHead>
+              <TableHead className="w-[100px] text-right">Download</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {reports.map((r) => (
-              <tr key={r.id} className="hover:bg-zinc-800/40 transition-colors">
-                <td className="px-5 py-4 font-mono text-xs font-medium text-blue-400">{r.id}</td>
-                <td className="px-5 py-4 font-medium text-white">{r.title}</td>
-                <td className="px-5 py-4 text-xs text-zinc-400">{r.period}</td>
-                <td className="px-5 py-4 text-xs text-zinc-300">{r.generatedBy}</td>
-                <td className="px-5 py-4 text-xs font-mono text-zinc-400">{r.format}</td>
-                <td className="px-5 py-4 text-right">
-                  <button className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors">
-                    Download
-                  </button>
-                </td>
-              </tr>
+              <TableRow key={r.id}>
+                <TableCell className="font-mono text-xs font-semibold text-primary">
+                  <div className="flex items-center gap-1.5">
+                    <IconFileText className="size-3.5 text-muted-foreground shrink-0" />
+                    <span>{r.id}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium text-foreground whitespace-normal">
+                  {r.title}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">{r.period}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{r.generatedBy}</TableCell>
+                <TableCell className="text-xs font-mono text-muted-foreground">{r.format}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="outline" size="xs" className="gap-1">
+                    <IconDownload className="size-3" />
+                    <span>Download</span>
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Report Schedules Section */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
-        <h2 className="text-sm font-semibold text-white">Automated Delivery Schedules</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg bg-zinc-950 border border-zinc-800/80 flex justify-between items-center text-xs">
-            <div>
-              <div className="font-medium text-white">Weekly Executive Summary</div>
-              <div className="text-zinc-500 mt-0.5">Every Monday at 06:00 UTC • Sent to security@icsams.local</div>
-            </div>
-            <span className="text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded">
-              Active
-            </span>
-          </div>
-
-          <div className="p-4 rounded-lg bg-zinc-950 border border-zinc-800/80 flex justify-between items-center text-xs">
-            <div>
-              <div className="font-medium text-white">Monthly Compliance Digest</div>
-              <div className="text-zinc-500 mt-0.5">1st of every month at 00:00 UTC • Sent to compliance@icsams.local</div>
-            </div>
-            <span className="text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded">
-              Active
-            </span>
-          </div>
-        </div>
-      </div>
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }

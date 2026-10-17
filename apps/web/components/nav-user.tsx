@@ -21,7 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { IconDotsVertical, IconUserCircle, IconCreditCard, IconNotification, IconLogout } from "@tabler/icons-react"
+import { IconDotsVertical, IconUserCircle, IconNotification, IconLogout } from "@tabler/icons-react"
 
 export function NavUser({
   user,
@@ -39,6 +39,16 @@ export function NavUser({
     .join("")
     .slice(0, 2)
     .toUpperCase()
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("access_token")
+    sessionStorage.removeItem("token")
+    sessionStorage.removeItem("access_token")
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+  }
 
   return (
     <SidebarMenu>
@@ -99,7 +109,10 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/auth/login" />}>
+            <DropdownMenuItem
+              onClick={handleLogout}
+              render={<Link href="/auth/login" onClick={handleLogout} />}
+            >
               <IconLogout />
               Log out
             </DropdownMenuItem>
