@@ -1,12 +1,14 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field
 from typing import List
 
 class Settings(BaseSettings):
     DATABASE_URL: str
-    SECRET_KEY: str
+    SECRET_KEY: str = Field(..., min_length=32)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3001"]
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000"]
+    SERVICE_API_KEY: str = ""
 
     class Config:
         env_file = ".env"

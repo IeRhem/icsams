@@ -1,7 +1,7 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import Optional, List
-from models import UserRole, RiskLevel, SensitivityLevel, User
+from models import UserRole, RiskLevel, SensitivityLevel
 
 
 # ── AUTH ───────────────────────────────────────────────────────
@@ -22,9 +22,6 @@ class UserCreate(BaseModel):
     password: str
     role: UserRole
 
-class UserInDB(User):
-    hashed_password: str
-
 class UserOut(BaseModel):
     id: int
     name: str
@@ -35,6 +32,13 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
 
 
 # ── LOCATIONS ──────────────────────────────────────────────────
@@ -72,12 +76,71 @@ class CameraOut(BaseModel):
 
 
 # ── EVENTS ─────────────────────────────────────────────────────
+class EventCreate(BaseModel):
+    camera_id: int
+    person_count: int = Field(ge=0)
+    frame_count: int = Field(ge=0)
+    raw_features: Optional[dict] = None
+
 class EventOut(BaseModel):
     id: int
     camera_id: int
     event_time: datetime
     person_count: int
     processed: bool
+
+    class Config:
+        from_attributes = True
+
+
+class DetectionOut(BaseModel):
+    id: int
+    frame_number: int
+    bbox_x1: float
+    bbox_y1: float
+    bbox_x2: float
+    bbox_y2: float
+    object_class: str
+    confidence: float
+
+    class Config:
+        from_attributes = True
+
+
+class AlertSummaryOut(BaseModel):
+    id: int
+    risk_level: str
+    anomaly_score: float
+    cls_confidence: float
+    behaviour_class: Optional[str]
+    created_at: datetime
+    acknowledged_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class CameraSummaryOut(BaseModel):
+    id: int
+    camera_name: str
+    ip_address: Optional[str]
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class EventDetailOut(BaseModel):
+    id: int
+    camera_id: int
+    event_time: datetime
+    person_count: int
+    frame_count: int
+    raw_features: Optional[dict]
+    processed: bool
+    detections: List[DetectionOut] = []
+    alert: Optional[AlertSummaryOut] = None
+    camera: Optional[CameraSummaryOut] = None
 
     class Config:
         from_attributes = True

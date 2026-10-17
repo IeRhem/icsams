@@ -1,3 +1,20 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 export default function ThresholdsPage() {
   const zoneOverrides = [
     { zone: "Zone 1 - Main Entrance", sensitivity: "Medium (75%)", minConfidence: "80%", loiteringTime: "45s" },
@@ -7,87 +24,91 @@ export default function ThresholdsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0 max-w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Detection Thresholds & Sensitivity</h1>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground font-heading">
+            Detection Thresholds & Sensitivity
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Configure machine vision trigger rules, loitering limits, and confidence cutoff percentages.
           </p>
         </div>
 
-        <button className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition-colors">
+        <Button size="sm">
           Save Configuration
-        </button>
+        </Button>
       </div>
 
       {/* Global Detection Sliders */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-white">Global Vision Sensitivity</h2>
-
-          <div className="space-y-4 text-xs">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold">Global Vision Sensitivity</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-xs">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-zinc-300">Minimum Classification Confidence</span>
-                <span className="font-mono text-blue-400 font-semibold">85%</span>
+                <span className="text-foreground font-medium">Minimum Classification Confidence</span>
+                <span className="font-mono text-primary font-semibold">85%</span>
               </div>
               <input
                 type="range"
                 min="50"
                 max="99"
                 defaultValue="85"
-                className="w-full accent-blue-500"
+                className="w-full accent-primary"
               />
-              <span className="text-[11px] text-zinc-500">
+              <span className="text-[11px] text-muted-foreground">
                 Detections below this probability threshold are discarded as noise.
               </span>
             </div>
 
-            <div className="space-y-2 pt-2 border-t border-zinc-800">
+            <div className="space-y-2 pt-2 border-t border-border">
               <div className="flex justify-between">
-                <span className="text-zinc-300">Loitering Time Trigger</span>
-                <span className="font-mono text-blue-400 font-semibold">30 seconds</span>
+                <span className="text-foreground font-medium">Loitering Time Trigger</span>
+                <span className="font-mono text-primary font-semibold">30 seconds</span>
               </div>
               <input
                 type="range"
                 min="5"
                 max="120"
                 defaultValue="30"
-                className="w-full accent-blue-500"
+                className="w-full accent-primary"
               />
-              <span className="text-[11px] text-zinc-500">
+              <span className="text-[11px] text-muted-foreground">
                 Duration a tracked person remains stationary before triggering an alert.
               </span>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-white">Static Object & Motion Calibration</h2>
-
-          <div className="space-y-4 text-xs">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold">Static Object & Motion Calibration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-xs">
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-zinc-300">Abandoned Object Timeout</span>
-                <span className="font-mono text-blue-400 font-semibold">5 minutes</span>
+                <span className="text-foreground font-medium">Abandoned Object Timeout</span>
+                <span className="font-mono text-primary font-semibold">5 minutes</span>
               </div>
               <input
                 type="range"
                 min="1"
                 max="30"
                 defaultValue="5"
-                className="w-full accent-blue-500"
+                className="w-full accent-primary"
               />
-              <span className="text-[11px] text-zinc-500">
+              <span className="text-[11px] text-muted-foreground">
                 Time an unattended item must remain motionless before raising an alarm.
               </span>
             </div>
 
-            <div className="space-y-2 pt-2 border-t border-zinc-800">
+            <div className="space-y-2 pt-2 border-t border-border">
               <div className="flex justify-between">
-                <span className="text-zinc-300">Night Mode Multiplier</span>
-                <span className="font-mono text-blue-400 font-semibold">1.4x Sens</span>
+                <span className="text-foreground font-medium">Night Mode Multiplier</span>
+                <span className="font-mono text-primary font-semibold">1.4x Sens</span>
               </div>
               <input
                 type="range"
@@ -95,54 +116,56 @@ export default function ThresholdsPage() {
                 max="2"
                 step="0.1"
                 defaultValue="1.4"
-                className="w-full accent-blue-500"
+                className="w-full accent-primary"
               />
-              <span className="text-[11px] text-zinc-500">
+              <span className="text-[11px] text-muted-foreground">
                 Boosts infrared and low-light optical sensitivity between 20:00 - 06:00.
               </span>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Per Zone Overrides Table */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-white">Per-Zone Sensitivity Overrides</h2>
-          <button className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+      <Card className="p-0 overflow-hidden min-w-0 max-w-full">
+        <div className="p-4 flex items-center justify-between border-b border-border">
+          <h2 className="text-sm font-semibold text-foreground">Per-Zone Sensitivity Overrides</h2>
+          <Button variant="ghost" size="xs">
             + Add Zone Rule
-          </button>
+          </Button>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-zinc-800">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-zinc-900 text-zinc-400 border-b border-zinc-800 font-semibold">
-              <tr>
-                <th className="px-4 py-2.5">Security Zone</th>
-                <th className="px-4 py-2.5">Preset Sensitivity</th>
-                <th className="px-4 py-2.5">Min Confidence</th>
-                <th className="px-4 py-2.5">Loitering Threshold</th>
-                <th className="px-4 py-2.5 text-right">Edit</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/80 text-zinc-300">
-              {zoneOverrides.map((zo) => (
-                <tr key={zo.zone} className="hover:bg-zinc-800/40">
-                  <td className="px-4 py-3 font-medium text-white">{zo.zone}</td>
-                  <td className="px-4 py-3 font-mono">{zo.sensitivity}</td>
-                  <td className="px-4 py-3 font-mono text-emerald-400">{zo.minConfidence}</td>
-                  <td className="px-4 py-3 font-mono">{zo.loiteringTime}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button className="text-zinc-400 hover:text-white transition-colors">
-                      Configure
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Security Zone</TableHead>
+              <TableHead>Preset Sensitivity</TableHead>
+              <TableHead>Min Confidence</TableHead>
+              <TableHead>Loitering Threshold</TableHead>
+              <TableHead className="text-right">Edit</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {zoneOverrides.map((zo) => (
+              <TableRow key={zo.zone}>
+                <TableCell className="font-medium text-foreground">{zo.zone}</TableCell>
+                <TableCell className="font-mono text-xs">{zo.sensitivity}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="font-mono text-emerald-500 text-[11px]">
+                    {zo.minConfidence}
+                  </Badge>
+                </TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">{zo.loiteringTime}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="outline" size="xs">
+                    Configure
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   );
 }
