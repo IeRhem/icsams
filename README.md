@@ -41,8 +41,9 @@ icsams/
 ├── apps/
 │   ├── web/                        # Next.js 14.2 dashboard
 │   │   ├── app/
-│   │   │   ├── (auth)/login/
-│   │   │   ├── guard/              # Guard dashboard pages
+│   │   │   ├── (auth)/auth/login/
+│   │   │   ├── alerts/
+│   │   │   │   └── [alertsId]/
 │   │   │   ├── officer/            # Investigation officer pages
 │   │   │   └── cso/                # Chief security officer pages
 │   │   └── .env.local
@@ -157,11 +158,11 @@ Check your Supabase dashboard → **Table Editor** — all six tables will appea
 
 ### 7. Seed the first CSO user
 
-Add the seed function to `main.py` temporarily (see Getting Started guide), start the server once, then remove it. This creates:
+Add the seed function to `main.py` temporarily (see Getting Started guide), start the server once, then remove it. Provide an operator-supplied email address and a unique, randomly generated password:
 
 ```
-Email:    cso@fuwukari.edu.ng
-Password: changeme123
+Email:    <operator-email>
+Password: <unique-randomly-generated-password>
 Role:     cso
 ```
 
@@ -219,6 +220,9 @@ SECRET_KEY="your-long-random-secret-key"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=480
 
+# Service API Key (required for service-to-service calls)
+SERVICE_API_KEY="your-service-api-key"
+
 # CORS — Next.js dev URL
 ALLOWED_ORIGINS=["http://localhost:3000"]
 
@@ -227,6 +231,8 @@ ML_SERVICE_URL="http://localhost:8001"
 ```
 
 > **Important:** Use Supabase Session mode (port 5432), not Transaction mode (port 6543). Transaction mode breaks SQLAlchemy prepared statements.
+>
+> Callers of the event (`POST /events/`) and alert (`POST /alerts/`) routes must provide the configured `SERVICE_API_KEY` value in the `X-Service-Key` header.
 
 ### `services/ml/.env`
 
@@ -387,11 +393,10 @@ The ML pipeline posts to `/events/` and `/alerts/` via HTTP after processing eac
 ## Dashboard Pages
 
 ```
-/login                          # Public — JWT auth
+/auth/login                     # Public — JWT auth
 
-/guard/dashboard                # Live cameras + active alert panel
-/guard/alerts                   # Alert list
-/guard/alerts/[id]              # Alert detail + acknowledge button
+/alerts                         # Alert list
+/alerts/[alertsId]              # Alert detail + acknowledge button
 
 /officer/events                 # Event query (date, location, risk filter)
 /officer/events/[id]            # Event detail + detection overlays

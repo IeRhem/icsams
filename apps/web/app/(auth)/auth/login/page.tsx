@@ -1,6 +1,8 @@
+import { Suspense } from "react";
+import { Metadata } from "next";
 import { LoginForm } from "@/components/login-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { Metadata } from "next";
+import { Spinner } from "@/components/ui/spinner";
 
 export const metadata: Metadata = {
   title: "Login | ICSAMS",
@@ -21,7 +23,15 @@ export default function LoginPage() {
                 Enter your credentials below to login to your account
               </p>
             </div>
-            <LoginForm />
+            <Suspense
+              fallback={
+                <div className="flex h-48 items-center justify-center">
+                  <Spinner className="size-6 text-background" />
+                </div>
+              }
+            >
+              <LoginForm />
+            </Suspense>
           </CardContent>
         </Card>
       </div>

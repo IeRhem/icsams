@@ -1,6 +1,8 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
+import { toast } from "sonner"
 import {
   Avatar,
   AvatarFallback,
@@ -22,9 +24,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { IconDotsVertical, IconUserCircle, IconNotification, IconLogout } from "@tabler/icons-react"
+import { getStoredUser, logoutUser } from "@/lib/auth"
 
 export function NavUser({
-  user,
+  user: defaultUser,
 }: {
   user: {
     name: string
@@ -33,21 +36,43 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const [user, setUser] = React.useState(defaultUser)
+
+  React.useEffect(() => {
+    const syncUser = () => {
+      const stored = getStoredUser()
+      if (stored) {
+        setUser({
+          name: stored.name || defaultUser.name,
+          email: stored.email || defaultUser.email,
+          avatar: defaultUser.avatar,
+        })
+      }
+    }
+
+    syncUser()
+    window.addEventListener("storage", syncUser)
+    window.addEventListener("user-profile-updated", syncUser)
+
+    return () => {
+      window.removeEventListener("storage", syncUser)
+      window.removeEventListener("user-profile-updated", syncUser)
+    }
+  }, [defaultUser.avatar, defaultUser.name, defaultUser.email])
+
   const initials = user.name
     .split(" ")
     .map((n) => n[0])
+    .filter(Boolean)
     .join("")
     .slice(0, 2)
     .toUpperCase()
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("access_token")
-    sessionStorage.removeItem("token")
-    sessionStorage.removeItem("access_token")
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    toast.success("Signing out...", {
+      description: "Ending your secure ICSAMS session.",
+    })
+    logoutUser("/auth/login")
   }
 
   return (
@@ -62,7 +87,7 @@ export function NavUser({
             <Avatar className="size-8 rounded-lg">
               <AvatarImage src={user.avatar} alt={user.name} />
               <AvatarFallback className="rounded-lg">
-                {initials || "AD"}
+                {initials || "CS"}
               </AvatarFallback>
             </Avatar>
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -85,7 +110,7 @@ export function NavUser({
                   <Avatar className="size-8">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback className="rounded-lg">
-                      {initials || "AD"}
+                      {initials || "CS"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
@@ -101,7 +126,7 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem render={<Link href="/settings" />}>
                 <IconUserCircle />
-                Account
+                Account Settings
               </DropdownMenuItem>
               <DropdownMenuItem render={<Link href="/alerts" />}>
                 <IconNotification />
@@ -110,8 +135,10 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              variant="destructive"
               onClick={handleLogout}
-              render={<Link href="/auth/login" onClick={handleLogout} />}
+              onSelect={handleLogout}
+              className="cursor-pointer"
             >
               <IconLogout />
               Log out
@@ -122,4 +149,3 @@ export function NavUser({
     </SidebarMenu>
   )
 }
-

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import Optional, List
 from models import UserRole, RiskLevel, SensitivityLevel
@@ -32,6 +32,13 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
 
 
 # ── LOCATIONS ──────────────────────────────────────────────────
@@ -71,8 +78,8 @@ class CameraOut(BaseModel):
 # ── EVENTS ─────────────────────────────────────────────────────
 class EventCreate(BaseModel):
     camera_id: int
-    person_count: int
-    frame_count: int
+    person_count: int = Field(ge=0)
+    frame_count: int = Field(ge=0)
     raw_features: Optional[dict] = None
 
 class EventOut(BaseModel):

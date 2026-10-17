@@ -177,7 +177,13 @@ export function ChartAreaInteractive({
           <span className="hidden @[540px]/card:block">
             {descriptionText}
           </span>
-          <span className="@[540px]/card:hidden">{effectiveTimeRange === "7d" ? "Last 7 days" : "Last 30 days"}</span>
+          <span className="@[540px]/card:hidden">
+            {effectiveTimeRange === "7d"
+              ? "Last 7 days"
+              : effectiveTimeRange === "30d"
+                ? "Last 30 days"
+                : "Last 3 months"}
+          </span>
         </CardDescription>
         <CardAction>
           <ToggleGroup
@@ -194,7 +200,7 @@ export function ChartAreaInteractive({
             <ToggleGroupItem value="7d">Last 7 days</ToggleGroupItem>
           </ToggleGroup>
           <Select
-            value={timeRange}
+            value={effectiveTimeRange}
             onValueChange={(value) => {
               if (value !== null) {
                 setTimeRange(value)

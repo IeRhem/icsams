@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from core.database import get_db
-from core.security import verify_password, create_access_token, decode_access_token
+from core.security import verify_password, hash_password, create_access_token, decode_access_token
 from models import User
-from models.schemas import LoginRequest, TokenResponse, UserOut
+from models.schemas import LoginRequest, TokenResponse, UserOut, UserUpdate
 
 router = APIRouter()
 
@@ -94,7 +94,48 @@ def require_cso(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
-# ── ME ENDPOINT ────────────────────────────────────────────────
+# ── ME ENDPOINTS ───────────────────────────────────────────────
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me", response_model=UserOut)
+def update_me(
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if payload.name is not None and payload.name.strip():
+        current_user.name = payload.name.strip()
+
+    if payload.email is not None and payload.email != current_user.email:
+        existing = db.query(User).filter(User.email == payload.email).first()
+        if existing and existing.id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email is already in use by another account",
+            )
+        current_user.email = payload.email
+
+    if payload.new_password:
+        if not payload.current_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is required to change password",
+            )
+        if not verify_password(payload.current_password, current_user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is incorrect",
+            )
+        if len(payload.new_password) < 6:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be at least 6 characters",
+            )
+        current_user.password_hash = hash_password(payload.new_password)
+
+    db.commit()
+    db.refresh(current_user)
     return current_user
