@@ -42,10 +42,11 @@ icsams/
 │   ├── web/                        # Next.js 14.2 dashboard
 │   │   ├── app/
 │   │   │   ├── (auth)/auth/login/
-│   │   │   ├── alerts/
-│   │   │   │   └── [alertsId]/
-│   │   │   ├── officer/            # Investigation officer pages
-│   │   │   └── cso/                # Chief security officer pages
+│   │   │   └── (dashboard)/        # Dashboard pages (/alerts, /events, /camaras, etc.)
+│   │   │       ├── alerts/
+│   │   │       │   └── [alertsId]/
+│   │   │       └── events/
+│   │   │           └── [eventsId]/
 │   │   └── .env.local
 │   │
 │   └── api/                        # FastAPI backend
@@ -133,6 +134,7 @@ source venv/bin/activate        # Linux/macOS
 # venv\Scripts\activate         # Windows
 
 pip install -r requirements.txt
+cd ../..
 ```
 
 ### 5. Set up the ML Python environment
@@ -140,8 +142,11 @@ pip install -r requirements.txt
 ```bash
 cd services/ml
 python -m venv venv
-source venv/bin/activate
+source venv/bin/activate        # Linux/macOS
+# venv\Scripts\activate         # Windows
+
 pip install -r requirements.txt
+cd ../..
 ```
 
 ### 6. Create database tables
@@ -150,7 +155,9 @@ Tables are created automatically by SQLAlchemy when the FastAPI server starts fo
 
 ```bash
 cd apps/api
-source venv/bin/activate
+source venv/bin/activate        # Linux/macOS
+# venv\Scripts\activate         # Windows
+
 uvicorn main:app --reload --port 8000
 ```
 
@@ -266,6 +273,7 @@ ReDoc: `http://localhost:8000/redoc`
 |---|---|---|---|
 | POST | `/auth/login` | Public | Returns JWT token + role |
 | GET | `/auth/me` | All roles | Returns current user profile |
+| PATCH | `/auth/me` | All roles | Update current user profile |
 
 ### Users
 
@@ -395,20 +403,17 @@ The ML pipeline posts to `/events/` and `/alerts/` via HTTP after processing eac
 ```
 /auth/login                     # Public — JWT auth
 
+/                               # Dashboard overview
 /alerts                         # Alert list
 /alerts/[alertsId]              # Alert detail + acknowledge button
-
-/officer/events                 # Event query (date, location, risk filter)
-/officer/events/[id]            # Event detail + detection overlays
-/officer/footage                # Camera footage review
-/officer/anomaly-report         # Anomaly score trends per location
-/officer/reports                # PDF report export
-
-/cso/analytics                  # System-wide incident analytics
-/cso/users                      # User management
-/cso/cameras                    # Camera + location management
-/cso/thresholds                 # Alert threshold + weight configuration
-
+/camaras                        # Live cameras + camera management
+/events                         # Event query (date, location, risk filter)
+/events/[eventsId]              # Event detail + detection overlays
+/footage                        # Camera footage review
+/analytics                      # System-wide incident analytics
+/anomaly-report                 # Anomaly score trends per location
+/thresholds                     # Alert threshold + weight configuration
+/reports                        # PDF report export & delivery schedules
 /settings                       # Profile + account settings
 ```
 

@@ -137,7 +137,6 @@ export function NavUser({
             <DropdownMenuItem
               variant="destructive"
               onClick={handleLogout}
-              onSelect={handleLogout}
               className="cursor-pointer"
             >
               <IconLogout />

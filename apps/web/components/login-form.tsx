@@ -26,6 +26,48 @@ import { cn } from "@/lib/utils"
 import { loginSchema, type LoginFormValues } from "@/schema"
 import { loginWithApi, parseApiError } from "@/lib/auth"
 
+function getSafeRedirectUrl(target: string | null | undefined): string {
+  if (!target || typeof target !== "string") return "/"
+  try {
+    const decoded = decodeURIComponent(target).trim()
+    if (!decoded) return "/"
+
+    // Preserve rejection of protocol-relative and backslash-prefixed redirects
+    if (
+      decoded.startsWith("//") ||
+      decoded.startsWith("/\\") ||
+      decoded.startsWith("\\")
+    ) {
+      return "/"
+    }
+
+    const currentOrigin =
+      typeof window !== "undefined" && window.location.origin
+        ? window.location.origin
+        : "http://localhost:3000"
+
+    const parsed = new URL(decoded, currentOrigin)
+
+    // Accept only when resolved origin matches the current origin
+    if (parsed.origin !== currentOrigin) {
+      return "/"
+    }
+
+    const normalizedPath = parsed.pathname + parsed.search + parsed.hash
+    if (
+      !normalizedPath.startsWith("/") ||
+      normalizedPath.startsWith("//") ||
+      normalizedPath.startsWith("/\\")
+    ) {
+      return "/"
+    }
+
+    return normalizedPath
+  } catch {
+    return "/"
+  }
+}
+
 export function LoginForm({
   className,
   ...props
@@ -54,10 +96,11 @@ export function LoginForm({
         description: `Welcome back, ${session.user.name || session.user.email}!`,
       })
 
-      const callbackUrl =
+      const targetUrl =
         searchParams?.get("callbackUrl") ||
-        searchParams?.get("redirect") ||
-        "/"
+        searchParams?.get("redirect")
+
+      const callbackUrl = getSafeRedirectUrl(targetUrl)
 
       router.push(callbackUrl)
       router.refresh()

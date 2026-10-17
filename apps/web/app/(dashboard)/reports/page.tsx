@@ -103,6 +103,32 @@ export default function ReportsPage() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Automated Delivery Schedules */}
+      <Card className="p-5 space-y-4 min-w-0 max-w-full">
+        <h2 className="text-sm font-semibold text-foreground">Automated Delivery Schedules</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-lg bg-muted/40 border border-border flex justify-between items-center text-xs">
+            <div>
+              <div className="font-medium text-foreground">Weekly Executive Summary</div>
+              <div className="text-muted-foreground mt-0.5">Every Monday at 06:00 UTC • Sent to security@icsams.local</div>
+            </div>
+            <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded">
+              Active
+            </span>
+          </div>
+
+          <div className="p-4 rounded-lg bg-muted/40 border border-border flex justify-between items-center text-xs">
+            <div>
+              <div className="font-medium text-foreground">Monthly Compliance Digest</div>
+              <div className="text-muted-foreground mt-0.5">1st of every month at 00:00 UTC • Sent to compliance@icsams.local</div>
+            </div>
+            <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded">
+              Active
+            </span>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

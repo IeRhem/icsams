@@ -162,6 +162,10 @@ export default function SettingsPage() {
       });
 
       setUser(updated);
+      profileForm.reset({
+        name: updated.name,
+        email: updated.email,
+      });
       toast.success("Profile updated", {
         description: "Your account details have been successfully saved.",
       });

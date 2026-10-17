@@ -1,6 +1,8 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from core.database import get_db
 from core.security import verify_password, hash_password, create_access_token, decode_access_token
@@ -106,11 +108,17 @@ def update_me(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if payload.name is not None and payload.name.strip():
-        current_user.name = payload.name.strip()
+    if payload.name is not None:
+        stripped_name = payload.name.strip()
+        if not stripped_name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Name cannot be blank",
+            )
+        current_user.name = stripped_name
 
-    if payload.email is not None and payload.email != current_user.email:
-        existing = db.query(User).filter(User.email == payload.email).first()
+    if payload.email is not None and payload.email.lower() != (current_user.email or "").lower():
+        existing = db.query(User).filter(func.lower(User.email) == payload.email.lower()).first()
         if existing and existing.id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -136,6 +144,13 @@ def update_me(
             )
         current_user.password_hash = hash_password(payload.new_password)
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is already in use by another account",
+        )
     db.refresh(current_user)
     return current_user
